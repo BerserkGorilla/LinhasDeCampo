@@ -83,11 +83,18 @@ def presetcharges(n=0):
         qqn = [[], []] # guarda as posições das cargas positivas
         qn = [] # guarda a magnitude das cargas negativas
         qp = [1,1,1,1,1,1,1,1,1,1] # guarda a magnitude das cargas positivas
+
+    elif n==6:
+      # 0 cargas 
+        qqp = [[], []] # guarda as posições das cargas negativas
+        qqn = [[], []] # guarda as posições das cargas positivas
+        qn = [] # guarda a magnitude das cargas negativas
+        qp = [] # guarda a magnitude das cargas positivas
     
     return qqp,qqn,qp,qn
     
     
-def calcE(N,M,qn,qqn,qp,qqp):
+def calcE(N,M,qn,qqn,qp,qqp,filtro=0):
     #Loop nas cargas negativas:
     for k in range(len(qn)):
         for i in range(N):#N está associado a Y
@@ -104,6 +111,39 @@ def calcE(N,M,qn,qqn,qp,qqp):
                 if denom != 0: 
                     Ex[i, j] += qp[k] * (j - qqp[0][k]) / denom
                     Ey[i, j] += qp[k] * (i - qqp[1][k]) / denom
+    #Descartando valores insignificantes
+    if filtro == 1:
+        kx = 0
+        ky = 0
+        #debug
+        print(kx)
+        print(ky)
+
+        kx = Ex[0,0]
+        ky = Ey[0,0]
+        #debug
+        print(kx)
+        print(ky)
+        for i in range(N):#N está associado a Y
+            for j in range(M):#M está associado a X
+                if Ex[i, j] > kx:
+                    kx = Ex[i, j]
+                if Ey[i, j] > ky:
+                    ky = Ey[i, j]
+        #debug
+        print(kx)
+        print(ky)
+        for i in range(N):#N está associado a Y
+            for j in range(M):#M está associado a X
+                if Ex[i, j]> 0 and Ex[i, j] < kx/15:
+                    Ex[i, j] = 0
+                elif Ex[i, j]< 0 and Ex[i, j] > -kx/15:
+                    Ex[i, j] = 0
+                if Ey[i, j]> 0 and Ey[i, j] < ky/15:
+                    Ey[i, j] = 0
+                elif Ey[i, j]< 0 and Ey[i, j] > -ky/15:
+                    Ey[i, j] = 0
+
     return Ex,Ey
     
 def veccol(Ex,Ey):
@@ -148,20 +188,23 @@ if aleatoriedade == 1:
                     Ey[i, j] += q * (i - qy) / denom
     plt.figure(figsize=(24, 16))               
     C,Ex,Ey = veccol(Ex,Ey)
-    plt.plot(*qq, 'bo')
+    plt.plot(*qq, 'bo',markersize=15,color ='green')
 else:
     chargetype = int(input("Para simular cargas pontuais coloque 0, para barras carregadas digite 1: "))
     if chargetype == 0:
         preset = int(input("1 para usar configurações predefinidas, para configurações livres seja livre para colocar outro inteiro: "))
         if preset == 1:
-            n = int(input('Selecione o número da configuração desejada 0-5: '))
+            n = int(input('Selecione o número da configuração desejada 0-6: '))
+            filtro = int(input("Deseja habilitar o filtro para linhas de campo? (1 para habilitar)"))
+            if filtro != 1:
+              filtro = 0
             qqp,qqn,qp,qn = presetcharges(n) 
-            Ex,Ey = calcE(N,M,qn,qqn,qp,qqp)
+            Ex,Ey = calcE(N,M,qn,qqn,qp,qqp,filtro)
             C,Ex,Ey = veccol(Ex,Ey)
             # Desenhando
             plt.figure(figsize=(24, 16))
-            plt.plot(*qqn, 'bo',color = 'blue')
-            plt.plot(*qqp, 'bo',color = 'red')
+            plt.plot(*qqn, 'bo',color = 'blue',markersize=15)
+            plt.plot(*qqp, 'bo',color = 'red',markersize=15)
             
     else: 
         x1 = float(input("posição em x da primeira barra de 0 a 24 no formato xx.xx: "))
